@@ -1,9 +1,3 @@
-/**
- * FrequencyAnalyzer
- *
- * Live bar chart of EEG band power using Recharts.
- * Delta / Theta / Alpha / Beta / Gamma
- */
 "use client";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -11,87 +5,107 @@ import {
 } from "recharts";
 import type { BandPower } from "@/types";
 
-interface Props {
-  bandPower: BandPower;
-}
+interface Props { bandPower: BandPower; }
 
 const BANDS = [
-  { key: "delta", label: "δ Delta",  range: "0.5–4Hz",  color: "#7b61ff" },
-  { key: "theta", label: "θ Theta",  range: "4–8Hz",    color: "#00d4ff" },
-  { key: "alpha", label: "α Alpha",  range: "8–13Hz",   color: "#00ff88" },
-  { key: "beta",  label: "β Beta",   range: "13–30Hz",  color: "#ffcc00" },
-  { key: "gamma", label: "γ Gamma",  range: "30Hz+",    color: "#ff6b35" },
-];
+    { key: "delta", symbol: "δ", name: "Delta", range: "0.5–4 Hz",  color: "#9080e0", note: "deep sleep"    },
+    { key: "theta", symbol: "θ", name: "Theta", range: "4–8 Hz",    color: "#5aafd4", note: "drowsy / REM"  },
+    { key: "alpha", symbol: "α", name: "Alpha", range: "8–13 Hz",   color: "#4abe8f", note: "relaxed"       },
+    { key: "beta",  symbol: "β", name: "Beta",  range: "13–30 Hz",  color: "#c8a83a", note: "focused"       },
+    { key: "gamma", symbol: "γ", name: "Gamma", range: "30+ Hz",    color: "#d4875a", note: "alert"         },
+  ];
 
-// Custom tooltip
-const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: { value: number; payload: { range: string; color: string } }[] }) => {
+const CustomTooltip = ({ active, payload }: {
+  active?: boolean;
+  payload?: { value: number; payload: { name: string; range: string; note: string; color: string } }[]
+}) => {
   if (!active || !payload?.length) return null;
-  const d = payload[0];
+  const d = payload[0].payload;
   return (
-    <div className="bg-[#0a0e14] border border-border rounded p-2">
-      <p className="font-mono text-xs" style={{ color: d.payload.color }}>
-        {d.payload.range}
-      </p>
-      <p className="font-mono text-sm text-text">{d.value.toFixed(1)}%</p>
+    <div className="bg-panel border border-border rounded-lg p-3 shadow-xl">
+      <p className="font-mono text-xs font-medium mb-1" style={{ color: d.color }}>{d.name} · {d.range}</p>
+      <p className="font-mono text-xs text-text">{payload[0].value.toFixed(1)}% power</p>
+      <p className="text-[10px] text-muted mt-1">associated with: {d.note}</p>
     </div>
   );
 };
 
 export default function FrequencyAnalyzer({ bandPower }: Props) {
-  const data = BANDS.map((b) => ({
-    name: b.label,
-    range: b.range,
-    color: b.color,
-    value: bandPower[b.key as keyof BandPower],
-  }));
+  const data = BANDS.map((b) => ({ ...b, value: bandPower[b.key as keyof BandPower] }));
+  const dominant = data.reduce((a, b) => a.value > b.value ? a : b);
 
   return (
-    <div className="bg-panel border border-border rounded-lg p-4">
-      <div className="flex items-center justify-between mb-4">
-        <span className="font-mono text-xs text-muted tracking-widest uppercase">Frequency Bands</span>
-        <span className="font-mono text-xs text-muted">PSD — rel. power %</span>
+    <div className="bg-panel border border-border rounded-xl p-5 flex flex-col gap-4">
+      <div>
+        <span className="font-mono text-xs text-bright font-medium tracking-widest uppercase">
+          Frequency Bands
+        </span>
+        {/* Inter subtitle */}
+        <p className="text-[11px] text-muted mt-1 leading-relaxed">
+          How much brain activity is in each frequency range. Taller = more energy.
+        </p>
       </div>
 
-      <ResponsiveContainer width="100%" height={180}>
-        <BarChart data={data} barCategoryGap="25%">
-          <CartesianGrid strokeDasharray="3 3" stroke="#1e2d40" vertical={false} />
+      {/* Dominant callout */}
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface border border-border">
+        <span className="font-mono text-sm" style={{ color: dominant.color }}>{dominant.symbol}</span>
+        <div>
+          <span className="font-mono text-xs text-bright">{dominant.name} dominant</span>
+          {/* Inter for contextual note */}
+          <span className="text-[10px] text-muted ml-2">— {dominant.note}</span>
+        </div>
+      </div>
+
+      <ResponsiveContainer width="100%" height={130}>
+        <BarChart data={data} barCategoryGap="30%" margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="2 4" stroke="#111d28" vertical={false} />
           <XAxis
-            dataKey="name"
-            tick={{ fill: "#c8d8e8", fontFamily: "monospace", fontSize: 11 }}
-            axisLine={{ stroke: "#1e2d40" }}
+            dataKey="symbol"
+            tick={{ fill: "#6b8fa8", fontFamily: "JetBrains Mono, monospace", fontSize: 13 }}
+            axisLine={false}
             tickLine={false}
           />
           <YAxis
             domain={[0, 60]}
-            tick={{ fill: "#3a5068", fontFamily: "monospace", fontSize: 10 }}
+            tick={{ fill: "#3a5570", fontFamily: "JetBrains Mono, monospace", fontSize: 9 }}
             axisLine={false}
             tickLine={false}
-            //@ts-ignore
             tickFormatter={(v) => `${v}%`}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,212,255,0.05)" }} />
-          <Bar dataKey="value" radius={[3, 3, 0, 0]}>
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(56,189,248,0.04)" }} />
+          <Bar dataKey="value" radius={[2, 2, 0, 0]}>
             {data.map((entry, i) => (
-              <Cell
-                key={i}
-                fill={entry.color}
-                style={{ filter: `drop-shadow(0 0 6px ${entry.color}88)` }}
-              />
+              <Cell key={i} fill={entry.color} opacity={0.85} />
             ))}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
 
-      {/* Band legend with live values */}
-      <div className="grid grid-cols-5 gap-1 mt-3">
-        {BANDS.map((b) => (
-          <div key={b.key} className="flex flex-col items-center gap-0.5">
-            <span className="font-mono text-xs" style={{ color: b.color }}>
-              {bandPower[b.key as keyof BandPower].toFixed(1)}%
-            </span>
-            <span className="font-mono text-xs text-muted">{b.range}</span>
-          </div>
-        ))}
+      {/* Mini legend rows */}
+      <div className="flex flex-col gap-1.5 border-t border-border pt-3">
+        {BANDS.map((b) => {
+          const val = bandPower[b.key as keyof BandPower];
+          const isDom = b.key === dominant.key;
+          return (
+            <div key={b.key} className="flex items-center gap-2">
+              <span className="font-mono text-[10px] w-4" style={{ color: b.color }}>{b.symbol}</span>
+              <span className="font-mono text-[10px] text-soft w-10">{b.name}</span>
+              <span className="text-[10px] text-muted w-16">{b.range}</span>
+              <div className="flex-1 h-1 bg-surface rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{ width: `${(val / 60) * 100}%`, backgroundColor: b.color, opacity: 0.8 }}
+                />
+              </div>
+              <span
+                className="font-mono text-[10px] w-8 text-right"
+                style={{ color: isDom ? b.color : "#3a5570" }}
+              >
+                {val.toFixed(0)}%
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

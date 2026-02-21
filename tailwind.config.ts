@@ -9,18 +9,23 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: "#0a0e12",
-        panel: "#0f1520",
-        border: "#1e2d40",
-        accent: "#00d4ff",
-        green: "#00ff88",
-        warn: "#ffaa00",
-        danger: "#ff3355",
-        muted: "#3a5068",
-        text: "#c8d8e8",
+        bg:      "#080b10",
+        panel:   "#0c1118",
+        surface: "#101820",
+        border:  "#1a2838",
+        accent:  "#5aafd4",   // teal — lifted slightly, not electric
+        dim:     "#2a5a7a",
+        green:   "#4abe8f",   // softer emerald — visible but calm
+        warn:    "#d4a843",   // warm amber
+        danger:  "#d46070",   // muted red
+        muted:   "#3a5570",
+        soft:    "#6b8fa8",
+        text:    "#a0b8cc",
+        bright:  "#c8dce8",
       },
       fontFamily: {
-        mono: ["'JetBrains Mono'", "'Fira Code'", "monospace"],
+        mono: ["'JetBrains Mono'", "monospace"],
+        sans: ["'Inter'", "system-ui", "sans-serif"],
       },
     },
   },
