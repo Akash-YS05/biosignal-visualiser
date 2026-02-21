@@ -7,76 +7,242 @@ interface Props {
   onExportCSV: () => void;
 }
 
-const STATES: { name: BrainState; description: string; detail: string; color: string; dominant: string }[] = [
-  { name: "Relaxed", description: "Alpha-dominant",      detail: "Eyes closed, idle. Alpha waves (8–13 Hz) rise when the brain disengages from active processing.",          color: "#4abe8f", dominant: "α"  },
-  { name: "Focused", description: "Beta-dominant",       detail: "Active thinking, reading, problem-solving. Beta (13–30 Hz) reflects engaged analytical cognition.",        color: "#5aafd4", dominant: "β"  },
-  { name: "Alert",   description: "Gamma/Beta-dominant", detail: "High arousal or sensory load. Gamma (30+ Hz) is associated with rapid information binding.",               color: "#c8a83a", dominant: "γ"  },
-  { name: "REM",     description: "Delta/Theta-dominant",detail: "REM sleep stage. Slow waves (0.5–8 Hz) dominate as the brain consolidates memory during dreaming.",        color: "#9080e0", dominant: "δθ" },
+const STATES: {
+  name: BrainState;
+  dominant: string;
+  bands: string;
+  detail: string;
+  color: string;
+}[] = [
+  {
+    name: "Relaxed",
+    dominant: "α",
+    bands: "Alpha-dominant",
+    detail: "Idle, eyes closed. Alpha rises when the brain disengages from active processing.",
+    color: "#4ade80",
+  },
+  {
+    name: "Focused",
+    dominant: "β",
+    bands: "Beta-dominant",
+    detail: "Active thinking, reading, coding. Beta reflects engaged analytical cognition.",
+    color: "#38bdf8",
+  },
+  {
+    name: "Alert",
+    dominant: "γ",
+    bands: "Gamma / Beta",
+    detail: "High arousal, rapid sensory processing. Gamma associated with information binding.",
+    color: "#facc15",
+  },
+  {
+    name: "REM",
+    dominant: "δθ",
+    bands: "Delta / Theta",
+    detail: "Deep sleep dreaming. Slow waves dominate as the brain consolidates memory.",
+    color: "#a78bfa",
+  },
 ];
 
 export default function StateControls({ currentState, onStateChange, onExportCSV }: Props) {
   const active = STATES.find((s) => s.name === currentState)!;
 
   return (
-    <div className="bg-panel border border-border rounded-xl p-5 flex flex-col gap-4">
-      <div>
-        <span className="font-mono text-xs text-bright font-medium tracking-widest uppercase">
-          State Simulator
+    <div
+      style={{
+        background: "var(--bg-panel)",
+        flexShrink: 0,       /* never collapse */
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* Header */}
+      <div className="panel-header">
+        <span className="section-label">Brain State</span>
+        <span style={{ fontSize: 11, color: "var(--t3)" }}>
+          shifts signal band weights
         </span>
-        <p className="text-[11px] text-muted mt-1 leading-relaxed">
-          Shifts which frequency bands dominate the signal. A real device would infer this automatically.
-        </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      {/* State rows */}
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {STATES.map((s) => {
           const isActive = currentState === s.name;
           return (
             <button
               key={s.name}
               onClick={() => onStateChange(s.name)}
-              className="flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-all"
               style={{
-                borderColor: isActive ? s.color + "70" : "#1a2838",
-                backgroundColor: isActive ? s.color + "12" : "#0c1118",
+                width: "100%",
+                display: "flex",
+                alignItems: "stretch",
+                background: isActive ? "var(--bg-hover)" : "transparent",
+                border: "none",
+                borderBottom: "1px solid var(--border-lo)",
+                cursor: "pointer",
+                textAlign: "left",
+                padding: 0,
+                transition: "background 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive)
+                  (e.currentTarget as HTMLButtonElement).style.background = "var(--bg-hover)";
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive)
+                  (e.currentTarget as HTMLButtonElement).style.background = "transparent";
               }}
             >
-              <div className="flex items-center justify-between w-full">
-                {/* Mono for the state name */}
-                <span className="font-mono text-xs font-medium" style={{ color: isActive ? s.color : "#6b8fa8" }}>
-                  {s.name}
-                </span>
+              {/* Left accent bar */}
+              <div
+                style={{
+                  width: 3,
+                  flexShrink: 0,
+                  background: isActive ? s.color : "transparent",
+                  transition: "background 0.2s",
+                }}
+              />
+
+              {/* Row content */}
+              <div
+                style={{
+                  flex: 1,
+                  padding: "10px 14px",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 12,
+                }}
+              >
+                {/* Greek symbol */}
                 <span
-                  className="font-mono text-[10px] px-1.5 py-0.5 rounded"
+                  className="mono"
                   style={{
-                    color: isActive ? s.color : "#3a5570",
-                    backgroundColor: isActive ? s.color + "1a" : "transparent",
+                    fontSize: 18,
+                    fontWeight: 600,
+                    color: isActive ? s.color : "var(--t4)",
+                    width: 24,
+                    flexShrink: 0,
+                    lineHeight: 1,
+                    paddingTop: 1,
+                    transition: "color 0.2s",
                   }}
                 >
                   {s.dominant}
                 </span>
+
+                {/* Labels */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: isActive ? "var(--text-1)" : "var(--t2)",
+                        transition: "color 0.2s",
+                      }}
+                    >
+                      {s.name}
+                    </span>
+                    <span
+                      className="mono"
+                      style={{
+                        fontSize: 10,
+                        color: isActive ? s.color : "var(--t4)",
+                        transition: "color 0.2s",
+                      }}
+                    >
+                      {s.bands}
+                    </span>
+                  </div>
+
+                  {/* Detail — only shown when active */}
+                  {isActive && (
+                    <p
+                      style={{
+                        fontSize: 11,
+                        color: "var(--t2)",
+                        marginTop: 4,
+                        lineHeight: 1.55,
+                      }}
+                    >
+                      {s.detail}
+                    </p>
+                  )}
+                </div>
+
+                {/* Checkmark when active */}
+                {isActive && (
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    style={{ flexShrink: 0, marginTop: 2 }}
+                  >
+                    <circle cx="7" cy="7" r="6" stroke={s.color} strokeWidth="1.5" />
+                    <path
+                      d="M4.5 7l2 2 3-3"
+                      stroke={s.color}
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
               </div>
-              {/* Inter for the description */}
-              <span className="text-[10px] text-muted leading-none">{s.description}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Active state detail — Inter */}
-      <div className="px-3 py-2.5 rounded-lg bg-surface border border-border">
-        <p className="text-[11px] text-soft leading-relaxed">{active.detail}</p>
-      </div>
-
-      <button
-        onClick={onExportCSV}
-        className="w-full text-[11px] py-2.5 px-4 rounded-lg border border-border text-soft hover:border-accent hover:text-accent hover:bg-[#38bdf808] transition-all tracking-wider uppercase"
+      {/* Export button */}
+      <div
+        style={{
+          padding: "12px 14px",
+          borderTop: "1px solid var(--border-lo)",
+        }}
       >
-        Export CSV — last 5 seconds
-      </button>
-      <p className="text-[10px] text-muted -mt-2 text-center">
-        Raw sample values, all channels. Open in Excel or Python.
-      </p>
+        <button
+          className="btn btn-cyan"
+          onClick={onExportCSV}
+          style={{
+            width: "100%",
+            justifyContent: "center",
+            padding: "8px 14px",
+          }}
+        >
+          <svg
+            width="11"
+            height="11"
+            viewBox="0 0 11 11"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          >
+            <path d="M5.5 1v6M2.5 5l3 3 3-3" />
+            <path d="M1 9.5h9" />
+          </svg>
+          Export CSV — last 5 seconds
+        </button>
+        <p
+          style={{
+            fontSize: 10,
+            color: "var(--t4)",
+            marginTop: 7,
+            textAlign: "center",
+          }}
+        >
+          Raw μV samples · all channels · open in Python or Excel
+        </p>
+      </div>
     </div>
   );
 }

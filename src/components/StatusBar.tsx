@@ -1,6 +1,3 @@
-/**
- * StatusBar — now includes pause/resume button
- */
 "use client";
 import { useEffect, useState } from "react";
 
@@ -14,7 +11,10 @@ export default function StatusBar({ paused, onTogglePause }: Props) {
   const [startTime] = useState(Date.now());
 
   useEffect(() => {
-    const id = setInterval(() => setElapsed(Math.floor((Date.now() - startTime) / 1000)), 1000);
+    const id = setInterval(
+      () => setElapsed(Math.floor((Date.now() - startTime) / 1000)),
+      1000
+    );
     return () => clearInterval(id);
   }, [startTime]);
 
@@ -22,80 +22,136 @@ export default function StatusBar({ paused, onTogglePause }: Props) {
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   return (
-    <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-panel shrink-0">
-
-      {/* Branding */}
-      <div className="flex items-center gap-3">
-        <span className="font-mono text-sm text-bright font-medium tracking-[0.2em]">NEUROSTREAM</span>
-        <span className="text-xs text-muted">/ EEG Visualizer</span>
-      </div>
-
-      {/* Center — device + pause */}
-      <div className="flex items-center gap-3">
-        {/* Device pill */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-surface">
+    <div
+      style={{
+        height: 48,
+        background: "var(--bg-panel)",
+        borderBottom: "1px solid var(--border)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 20px",
+        flexShrink: 0,
+        zIndex: 20,
+        position: "relative",
+      }}
+    >
+      {/* Left — wordmark */}
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Minimal logo — 3 horizontal bars of different widths */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {[12, 8, 10].map((w, i) => (
+              <div
+                key={i}
+                style={{
+                  width: w,
+                  height: 1.5,
+                  background: "var(--cyan)",
+                  borderRadius: 0,
+                }}
+              />
+            ))}
+          </div>
           <span
-            className={`w-1.5 h-1.5 rounded-full transition-colors ${paused ? "" : "breathe"}`}
-            style={{ backgroundColor: paused ? "#6b8fa8" : "#34d399" }}
-          />
-          <span className="font-mono text-xs text-soft">Anthriq Instinct</span>
-          <span className="text-xs text-muted">· SIM</span>
+            className="mono"
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              letterSpacing: "0.1em",
+              color: "var(--text-1)",
+            }}
+          >
+            NEUROSTREAM
+          </span>
         </div>
 
-        {/* Pause / Resume button */}
-        <button
-          onClick={onTogglePause}
-          className={`
-            flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-medium
-            transition-all duration-200
-            ${paused
-              ? "border-green bg-[#34d39915] text-green hover:bg-[#34d39925]"
-              : "border-border bg-surface text-soft hover:border-[#38bdf8] hover:text-[#38bdf8] hover:bg-[#38bdf808]"
-            }
-          `}
-        >
+        <div
+          style={{
+            width: 1,
+            height: 16,
+            background: "var(--border)",
+          }}
+        />
+
+        {/* Device status */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div
+            className={paused ? "" : "blink"}
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: paused ? "var(--t3)" : "var(--cyan)",
+            }}
+          />
+          <span className="mono" style={{ fontSize: 11, color: "var(--t3)" }}>
+            ANTHRIQ INSTINCT
+          </span>
+          <span
+            className="mono"
+            style={{
+              fontSize: 9,
+              color: "var(--cyan)",
+              background: "var(--cyan-bg)",
+              border: "1px solid var(--cyan-bdr)",
+              padding: "1px 5px",
+              borderRadius: 2,
+              letterSpacing: "0.08em",
+            }}
+          >
+            SIM
+          </span>
+        </div>
+      </div>
+
+      {/* Center — pause */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {paused && (
+          <span
+            className="mono blink"
+            style={{ fontSize: 10, color: "var(--amber)", letterSpacing: "0.1em" }}
+          >
+            STREAM PAUSED
+          </span>
+        )}
+        <button className={paused ? "btn btn-cyan" : "btn"} onClick={onTogglePause}>
           {paused ? (
             <>
-              {/* Play icon */}
-              <svg width="10" height="11" viewBox="0 0 10 11" fill="currentColor">
-                <path d="M2 1.5l7 4-7 4V1.5z" />
+              <svg width="9" height="10" viewBox="0 0 9 10" fill="currentColor">
+                <path d="M1 1.2L8 5 1 8.8V1.2z" />
               </svg>
-              Resume
+              Resume Stream
             </>
           ) : (
             <>
-              {/* Pause icon */}
-              <svg width="10" height="11" viewBox="0 0 10 11" fill="currentColor">
-                <rect x="1.5" y="1.5" width="2.5" height="8" rx="0.5" />
-                <rect x="6" y="1.5" width="2.5" height="8" rx="0.5" />
+              <svg width="9" height="10" viewBox="0 0 9 10" fill="currentColor">
+                <rect x="1" y="1" width="2.5" height="8" rx="0.5" />
+                <rect x="5.5" y="1" width="2.5" height="8" rx="0.5" />
               </svg>
-              Pause
+              Pause Stream
             </>
           )}
         </button>
-
-        {/* Paused badge */}
-        {paused && (
-          <span className="font-mono text-xs text-warn tracking-widest animate-pulse">
-            PAUSED
-          </span>
-        )}
       </div>
 
-      {/* Session meta */}
-      <div className="flex items-center gap-5">
-        <div className="flex flex-col items-end">
-          <span className="font-mono text-xs text-bright">{fmt(elapsed)}</span>
-          <span className="text-[10px] text-muted leading-none">session</span>
-        </div>
-        <div className="flex flex-col items-end">
-          <span className="font-mono text-xs text-bright">256 Hz</span>
-          <span className="text-[10px] text-muted leading-none">sample rate</span>
-        </div>
-        <div className="flex flex-col items-end">
-          <span className="font-mono text-xs text-bright">8 ch</span>
-          <span className="text-[10px] text-muted leading-none">electrodes</span>
-        </div>
+      {/* Right — meta */}
+      <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+        {[
+          { label: "SESSION", value: fmt(elapsed) },
+          { label: "SAMPLE RATE", value: "256 Hz" },
+          { label: "RESOLUTION", value: "24-bit" },
+          { label: "CHANNELS", value: "8" },
+        ].map(({ label, value }) => (
+          <div key={label} style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1 }}>
+            <span className="mono" style={{ fontSize: 13, fontWeight: 500, color: "var(--text-1)" }}>
+              {value}
+            </span>
+            <span className="mono" style={{ fontSize: 9, color: "var(--t4)", letterSpacing: "0.08em" }}>
+              {label}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

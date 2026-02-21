@@ -9,40 +9,115 @@ import type { BrainState } from "@/types";
 
 export default function Home() {
   const [brainState, setBrainState] = useState<BrainState>("Relaxed");
-  const { buffers, writeHead, bandPower, paused, togglePause, exportCSV } = useSignalWorker(brainState);
+  const { buffers, writeHead, bandPower, paused, togglePause, exportCSV } =
+    useSignalWorker(brainState);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[#080b10]">
-
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        overflow: "hidden",
+        background: "var(--bg)",
+      }}
+    >
+      {/* Top bar — fixed height */}
       <StatusBar paused={paused} onTogglePause={togglePause} />
 
-      {/* Info strip */}
-      <div className="px-6 py-2 border-b border-border bg-[#0a0e14] flex items-center gap-4 shrink-0">
-        <span className="text-[10px] text-muted">
-          Simulated 8-channel EEG · 256 Hz · Signal generation runs in a background Web Worker thread
-        </span>
-        <span className="text-[#1a2838]">·</span>
-        <span className="text-[10px] text-muted">
-          Replace signal source with BLE stream from Anthriq Instinct to use with real hardware
-        </span>
+      {/* Info strip — fixed height */}
+      <div
+        style={{
+          height: 30,
+          borderBottom: "1px solid var(--border-lo)",
+          display: "flex",
+          alignItems: "center",
+          padding: "0 20px",
+          gap: 8,
+          flexShrink: 0,
+          background: "var(--bg)",
+          overflow: "hidden",
+        }}
+      >
+        {[
+          "8-channel EEG simulation",
+          "256 Hz sample rate",
+          "Web Worker signal generation",
+          "Swap source → Anthriq BLE for live hardware",
+        ].map((item, i) => (
+          <span
+            key={i}
+            className="mono"
+            style={{
+              fontSize: 10,
+              color: "var(--t3)",
+              letterSpacing: "0.04em",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {i > 0 && <span style={{ color: "var(--t4)" }}>·</span>}
+            {item}
+          </span>
+        ))}
       </div>
 
-      {/* Main layout — overflow-hidden keeps everything contained */}
-      <div className="flex flex-1 overflow-hidden gap-3 p-4">
-
-        {/* 
-          Signal stream column.
-          overflow-hidden here is critical — the SignalStreamPanel
-          manages its own internal scroll, so this column must NOT scroll.
-        */}
-        <div className="flex-1 min-w-0 overflow-hidden">
-          <SignalStreamPanel buffers={buffers} writeHead={writeHead} paused={paused} />
+      {/*
+        Main content row.
+        This flex row must fill exactly the remaining vertical space.
+        overflow: hidden here is correct — each child manages its own scroll.
+      */}
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,          /* CRITICAL — without this, flex children ignore overflow */
+          display: "flex",
+          overflow: "hidden",
+          gap: 1,
+          background: "var(--border-lo)",
+        }}
+      >
+        {/* Signal stream panel — fills all horizontal space left */}
+        <div
+          style={{
+            flex: 1,
+            minWidth: 0,
+            minHeight: 0,
+            overflow: "hidden",
+            background: "var(--bg)",
+          }}
+        >
+          <SignalStreamPanel
+            buffers={buffers}
+            writeHead={writeHead}
+            paused={paused}
+          />
         </div>
 
-        {/* Right sidebar — this one CAN scroll independently */}
-        <div className="w-72 shrink-0 flex flex-col gap-3 overflow-y-auto">
-
+        {/*
+          Sidebar — fixed 300px width.
+          THIS div is the scroll container. It must have:
+            - a fixed/constrained height (inherited from flex parent)
+            - minHeight: 0 so it respects the parent's height
+            - overflowY: auto so it actually scrolls
+        */}
+        <div
+          style={{
+            width: 300,
+            flexShrink: 0,
+            minHeight: 0,
+            overflowY: "auto",   /* ← THE actual scroll container */
+            overflowX: "hidden",
+            background: "var(--bg)",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <FrequencyAnalyzer bandPower={bandPower} />
+
+          <div style={{ height: 1, background: "var(--border-lo)", flexShrink: 0 }} />
 
           <StateControls
             currentState={brainState}
@@ -50,62 +125,116 @@ export default function Home() {
             onExportCSV={exportCSV}
           />
 
+          <div style={{ height: 1, background: "var(--border-lo)", flexShrink: 0 }} />
+
           {/* Device info */}
-          <div className="bg-panel border border-border rounded-xl p-5">
-            <span className="font-mono text-xs text-bright font-medium tracking-widest uppercase block mb-1">
-              Device Info
-            </span>
-            <p className="text-[11px] text-muted mb-4 leading-relaxed">
-              Metadata a real headset reports over BLE on connect.
-            </p>
-            <div className="flex flex-col gap-3">
-              {[
-                ["Device",    "Anthriq Instinct",  "headset model"],
-                ["Firmware",  "v2.3.1-sim",         "software version on device"],
-                ["Protocol",  "NeuroStream BLE",    "data transfer standard"],
-                ["Impedance", "< 5 kΩ (sim)",       "electrode-skin contact quality"],
-                ["Filter",    "0.5–100 Hz BP",      "removes DC offset and high-freq noise"],
-                ["Notch",     "50 / 60 Hz",         "cancels power line interference"],
-              ].map(([key, val, hint]) => (
-                <div key={key} className="flex flex-col gap-0.5">
-                  <div className="flex justify-between items-baseline">
-                    <span className="font-mono text-[10px] text-muted">{key}</span>
-                    <span className="font-mono text-[10px] text-soft">{val}</span>
-                  </div>
-                  <span className="text-[9px] text-[#253545] leading-none">{hint}</span>
-                </div>
-              ))}
+          <div style={{ background: "var(--bg-panel)", flexShrink: 0 }}>
+            <div className="panel-header">
+              <span className="section-label">Device Info</span>
             </div>
+            {[
+              ["Device",    "Anthriq Instinct"],
+              ["Firmware",  "v2.3.1-sim"],
+              ["Protocol",  "NeuroStream BLE"],
+              ["Impedance", "< 5 kΩ"],
+              ["Filter",    "0.5–100 Hz BP"],
+              ["Notch",     "50 / 60 Hz"],
+            ].map(([key, val], i, arr) => (
+              <div
+                key={key}
+                className="row-hover"
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "7px 16px",
+                  borderBottom: i < arr.length - 1 ? "1px solid var(--border-lo)" : "none",
+                }}
+              >
+                <span style={{ fontSize: 11, color: "var(--t3)" }}>{key}</span>
+                <span
+                  className="mono"
+                  style={{ fontSize: 11, fontWeight: 500, color: "var(--text-1)" }}
+                >
+                  {val}
+                </span>
+              </div>
+            ))}
           </div>
 
-          {/* Legend */}
-          <div className="bg-panel border border-border rounded-xl p-5">
-            <span className="font-mono text-xs text-bright font-medium tracking-widest uppercase block mb-3">
-              Reading the display
-            </span>
-            <div className="flex flex-col gap-4">
+          <div style={{ height: 1, background: "var(--border-lo)", flexShrink: 0 }} />
+
+          {/* How to read */}
+          <div style={{ background: "var(--bg-panel)", flexShrink: 0 }}>
+            <div className="panel-header">
+              <span className="section-label">How to Read</span>
+            </div>
+            <div
+              style={{
+                padding: "12px 16px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+              }}
+            >
               {[
                 {
                   label: "Waveform",
-                  text: "Each row shows raw voltage from one electrode over the last ~5 seconds. Amplitude reflects signal strength."
+                  color: "var(--cyan)",
+                  text: "Raw voltage from one scalp electrode. X-axis = time (past → present). Y-axis = amplitude in μV.",
                 },
                 {
-                  label: "Signal Quality (SQ)",
-                  text: "Green >75% · Amber 45–75% · Red <45%. Based on electrode-skin impedance. Low quality means noisy contact."
+                  label: "Signal Quality",
+                  color: "var(--green)",
+                  text: "Impedance estimate. Green >75% = reliable. Amber = check contact. Red = noisy — don't use for analysis.",
                 },
                 {
                   label: "Band Power %",
-                  text: "Relative energy per frequency band. All 5 bands sum to 100%. Shifts when you change the brain state."
+                  color: "#a78bfa",
+                  text: "Proportion of signal energy in each frequency band. All 5 sum to 100%.",
                 },
               ].map((item) => (
                 <div key={item.label}>
-                  <span className="font-mono text-[10px] text-accent block mb-1">{item.label}</span>
-                  <p className="text-[10px] text-muted leading-relaxed">{item.text}</p>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginBottom: 4,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 2,
+                        height: 10,
+                        background: item.color,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span
+                      className="mono"
+                      style={{ fontSize: 11, fontWeight: 500, color: "var(--text-1)" }}
+                    >
+                      {item.label}
+                    </span>
+                  </div>
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: "var(--t2)",
+                      lineHeight: 1.6,
+                      paddingLeft: 8,
+                    }}
+                  >
+                    {item.text}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
 
+          {/* Bottom padding so last item isn't flush against the scrollbar */}
+          <div style={{ height: 16, flexShrink: 0 }} />
         </div>
       </div>
     </div>

@@ -9,23 +9,32 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg:      "#080b10",
-        panel:   "#0c1118",
-        surface: "#101820",
-        border:  "#1a2838",
-        accent:  "#5aafd4",   // teal — lifted slightly, not electric
-        dim:     "#2a5a7a",
-        green:   "#4abe8f",   // softer emerald — visible but calm
-        warn:    "#d4a843",   // warm amber
-        danger:  "#d46070",   // muted red
-        muted:   "#3a5570",
-        soft:    "#6b8fa8",
-        text:    "#a0b8cc",
-        bright:  "#c8dce8",
+        bg:      "#09090b",
+        raised:  "#0f0f11",
+        panel:   "#111113",
+        hover:   "#18181b",
+        border:  "#27272a",
+        borderlo:"#1c1c1f",
+        t1:      "#fafafa",
+        t2:      "#a1a1aa",
+        t3:      "#52525b",
+        t4:      "#3f3f46",
+        cyan:    "#06b6d4",
+        cyandim: "#0891b2",
+        red:     "#f87171",
+        amber:   "#fbbf24",
+        green:   "#4ade80",
       },
       fontFamily: {
-        mono: ["'JetBrains Mono'", "monospace"],
-        sans: ["'Inter'", "system-ui", "sans-serif"],
+        mono: ["'IBM Plex Mono'", "monospace"],
+        sans: ["'Manrope'",       "sans-serif"],
+      },
+      borderRadius: {
+        DEFAULT: "4px",
+        sm: "2px",
+        md: "4px",
+        lg: "4px",
+        xl: "6px",
       },
     },
   },

@@ -1,107 +1,170 @@
 "use client";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  Cell, ResponsiveContainer
-} from "recharts";
 import type { BandPower } from "@/types";
 
 interface Props { bandPower: BandPower; }
 
 const BANDS = [
-    { key: "delta", symbol: "δ", name: "Delta", range: "0.5–4 Hz",  color: "#9080e0", note: "deep sleep"    },
-    { key: "theta", symbol: "θ", name: "Theta", range: "4–8 Hz",    color: "#5aafd4", note: "drowsy / REM"  },
-    { key: "alpha", symbol: "α", name: "Alpha", range: "8–13 Hz",   color: "#4abe8f", note: "relaxed"       },
-    { key: "beta",  symbol: "β", name: "Beta",  range: "13–30 Hz",  color: "#c8a83a", note: "focused"       },
-    { key: "gamma", symbol: "γ", name: "Gamma", range: "30+ Hz",    color: "#d4875a", note: "alert"         },
-  ];
-
-const CustomTooltip = ({ active, payload }: {
-  active?: boolean;
-  payload?: { value: number; payload: { name: string; range: string; note: string; color: string } }[]
-}) => {
-  if (!active || !payload?.length) return null;
-  const d = payload[0].payload;
-  return (
-    <div className="bg-panel border border-border rounded-lg p-3 shadow-xl">
-      <p className="font-mono text-xs font-medium mb-1" style={{ color: d.color }}>{d.name} · {d.range}</p>
-      <p className="font-mono text-xs text-text">{payload[0].value.toFixed(1)}% power</p>
-      <p className="text-[10px] text-muted mt-1">associated with: {d.note}</p>
-    </div>
-  );
-};
+  { key: "delta", symbol: "δ", name: "Delta", range: "0.5–4 Hz",  color: "#a78bfa", note: "deep sleep"    },
+  { key: "theta", symbol: "θ", name: "Theta", range: "4–8 Hz",    color: "#38bdf8", note: "drowsy / REM"  },
+  { key: "alpha", symbol: "α", name: "Alpha", range: "8–13 Hz",   color: "#4ade80", note: "relaxed"       },
+  { key: "beta",  symbol: "β", name: "Beta",  range: "13–30 Hz",  color: "#facc15", note: "focused"       },
+  { key: "gamma", symbol: "γ", name: "Gamma", range: "30+ Hz",    color: "#f97316", note: "alert"         },
+];
 
 export default function FrequencyAnalyzer({ bandPower }: Props) {
-  const data = BANDS.map((b) => ({ ...b, value: bandPower[b.key as keyof BandPower] }));
-  const dominant = data.reduce((a, b) => a.value > b.value ? a : b);
+  const values = BANDS.map((b) => ({ ...b, value: bandPower[b.key as keyof BandPower] }));
+  const dominant = values.reduce((a, b) => a.value > b.value ? a : b);
+  const max = Math.max(...values.map((v) => v.value));
 
   return (
-    <div className="bg-panel border border-border rounded-xl p-5 flex flex-col gap-4">
-      <div>
-        <span className="font-mono text-xs text-bright font-medium tracking-widest uppercase">
-          Frequency Bands
-        </span>
-        {/* Inter subtitle */}
-        <p className="text-[11px] text-muted mt-1 leading-relaxed">
-          How much brain activity is in each frequency range. Taller = more energy.
-        </p>
+    <div className="panel fadein">
+      {/* Header */}
+      <div className="panel-header">
+        <span className="section-label">Frequency Bands</span>
+        <span style={{ fontSize: 11, color: "var(--t3)" }}>relative power %</span>
       </div>
 
-      {/* Dominant callout */}
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface border border-border">
-        <span className="font-mono text-sm" style={{ color: dominant.color }}>{dominant.symbol}</span>
+      {/* Dominant state callout */}
+      <div
+        style={{
+          margin: "12px 16px 0",
+          padding: "10px 14px",
+          background: "var(--bg)",
+          border: `1px solid ${dominant.color}30`,
+          borderLeft: `3px solid ${dominant.color}`,
+          borderRadius: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
         <div>
-          <span className="font-mono text-xs text-bright">{dominant.name} dominant</span>
-          {/* Inter for contextual note */}
-          <span className="text-[10px] text-muted ml-2">— {dominant.note}</span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+            <span
+              className="mono"
+              style={{ fontSize: 18, fontWeight: 600, color: dominant.color }}
+            >
+              {dominant.symbol}
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-1)" }}>
+              {dominant.name}
+            </span>
+            <span style={{ fontSize: 11, color: "var(--t2)" }}>dominant</span>
+          </div>
+          <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 2 }}>
+            {dominant.range} · {dominant.note}
+          </div>
         </div>
+        <span
+          className="mono"
+          style={{ fontSize: 22, fontWeight: 600, color: dominant.color }}
+        >
+          {dominant.value.toFixed(1)}%
+        </span>
       </div>
 
-      <ResponsiveContainer width="100%" height={130}>
-        <BarChart data={data} barCategoryGap="30%" margin={{ top: 4, right: 4, left: -22, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="2 4" stroke="#111d28" vertical={false} />
-          <XAxis
-            dataKey="symbol"
-            tick={{ fill: "#6b8fa8", fontFamily: "JetBrains Mono, monospace", fontSize: 13 }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            domain={[0, 60]}
-            tick={{ fill: "#3a5570", fontFamily: "JetBrains Mono, monospace", fontSize: 9 }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={(v) => `${v}%`}
-          />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(56,189,248,0.04)" }} />
-          <Bar dataKey="value" radius={[2, 2, 0, 0]}>
-            {data.map((entry, i) => (
-              <Cell key={i} fill={entry.color} opacity={0.85} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-
-      {/* Mini legend rows */}
-      <div className="flex flex-col gap-1.5 border-t border-border pt-3">
-        {BANDS.map((b) => {
-          const val = bandPower[b.key as keyof BandPower];
+      {/* Lollipop rows */}
+      <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+        {values.map((b) => {
           const isDom = b.key === dominant.key;
+          const pct = (b.value / (max * 1.15)) * 100;
           return (
-            <div key={b.key} className="flex items-center gap-2">
-              <span className="font-mono text-[10px] w-4" style={{ color: b.color }}>{b.symbol}</span>
-              <span className="font-mono text-[10px] text-soft w-10">{b.name}</span>
-              <span className="text-[10px] text-muted w-16">{b.range}</span>
-              <div className="flex-1 h-1 bg-surface rounded-full overflow-hidden">
+            <div key={b.key} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {/* Symbol */}
+              <span
+                className="mono"
+                style={{
+                  width: 16,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: isDom ? b.color : "var(--t3)",
+                  flexShrink: 0,
+                  textAlign: "center",
+                }}
+              >
+                {b.symbol}
+              </span>
+
+              {/* Name */}
+              <span
+                style={{
+                  width: 38,
+                  fontSize: 11,
+                  fontWeight: isDom ? 600 : 400,
+                  color: isDom ? "var(--text-1)" : "var(--t2)",
+                  flexShrink: 0,
+                }}
+              >
+                {b.name}
+              </span>
+
+              {/* Track + fill + dot */}
+              <div
+                style={{
+                  flex: 1,
+                  height: 2,
+                  background: "var(--border)",
+                  position: "relative",
+                  borderRadius: 0,
+                }}
+              >
                 <div
-                  className="h-full rounded-full transition-all duration-300"
-                  style={{ width: `${(val / 60) * 100}%`, backgroundColor: b.color, opacity: 0.8 }}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    height: "100%",
+                    width: `${pct}%`,
+                    background: isDom ? b.color : b.color + "80",
+                    transition: "width 0.4s cubic-bezier(0.16,1,0.3,1)",
+                    borderRadius: 0,
+                  }}
+                />
+                {/* Dot at end */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: `${pct}%`,
+                    width: isDom ? 8 : 6,
+                    height: isDom ? 8 : 6,
+                    background: b.color,
+                    borderRadius: "50%",
+                    transform: "translate(-50%, -50%)",
+                    transition: "left 0.4s cubic-bezier(0.16,1,0.3,1)",
+                    opacity: isDom ? 1 : 0.7,
+                  }}
                 />
               </div>
+
+              {/* Value */}
               <span
-                className="font-mono text-[10px] w-8 text-right"
-                style={{ color: isDom ? b.color : "#3a5570" }}
+                className="mono"
+                style={{
+                  width: 38,
+                  fontSize: 12,
+                  fontWeight: isDom ? 600 : 400,
+                  color: isDom ? b.color : "var(--t2)",
+                  textAlign: "right",
+                  flexShrink: 0,
+                }}
               >
-                {val.toFixed(0)}%
+                {b.value.toFixed(1)}%
+              </span>
+
+              {/* Range */}
+              <span
+                className="mono"
+                style={{
+                  width: 52,
+                  fontSize: 9,
+                  color: "var(--t4)",
+                  textAlign: "right",
+                  flexShrink: 0,
+                  letterSpacing: "0.04em",
+                }}
+              >
+                {b.range}
               </span>
             </div>
           );
