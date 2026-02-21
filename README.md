@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NeuroStream
 
-## Getting Started
+> Real-time multi-channel EEG biosignal visualization dashboard — companion layer for the **Anthriq Instinct** EEG headset.
 
-First, run the development server:
+<img width="1919" height="899" alt="image" src="https://github.com/user-attachments/assets/7194325c-ddc1-4a30-ae9c-821213b912d0" />
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Overview
+
+NeuroStream is a developer-facing biosignal visualizer built to demonstrate how real-time EEG data from a device like the Anthriq Instinct could be rendered, analyzed, and interacted with in a browser — with zero backend required.
+
+It simulates an 8-channel EEG stream using a sum-of-sines + Gaussian noise model, runs signal generation entirely in a **Web Worker** off the main thread, renders waveforms with the **Canvas API**, and displays frequency band power with **Recharts**.
+
+## Architecture
+```
+signal.worker.js          ← Web Worker: generates EEG samples at 256 Hz
+        ↓ postMessage (SignalFrame)
+useSignalWorker.ts        ← React hook: ring buffer management, CSV export
+        ↓ props
+SignalStreamPanel.tsx     ← 8x ChannelStrip (Canvas waveform renderers)
+FrequencyAnalyzer.tsx     ← Recharts bar chart (δ θ α β γ band power)
+StateControls.tsx         ← Brain state presets + CSV export button
+StatusBar.tsx             ← Device status, session timer
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Signal Generation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Each channel is modeled as:
+```
+signal(t) = Σ [ weight_band × sin(2π × freq_band × t + φ_channel) ]
+           + gaussian_noise(σ=0.08)
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Band weights shift based on the active **brain state**:
 
-## Learn More
+| State   | δ    | θ    | α    | β    | γ    |
+|---------|------|------|------|------|------|
+| Relaxed | 0.2  | 0.3  | 1.0  | 0.3  | 0.1  |
+| Focused | 0.1  | 0.2  | 0.4  | 1.0  | 0.3  |
+| Alert   | 0.1  | 0.1  | 0.2  | 0.8  | 1.0  |
+| REM     | 1.0  | 0.8  | 0.2  | 0.1  | 0.05 |
 
-To learn more about Next.js, take a look at the following resources:
+## Tech Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Next.js 14** (App Router, client-side only)
+- **TypeScript** throughout
+- **Tailwind CSS** — dark scientific aesthetic
+- **Canvas API** — raw waveform rendering, no chart library overhead
+- **Recharts** — frequency band bar chart
+- **Web Workers** — signal generation off main thread
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Getting Started
+```bash
+npm install
+npm run dev
+```
 
-## Deploy on Vercel
+Open [http://localhost:3000](http://localhost:3000).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Relevance to Anthriq Instinct
+
+The Anthriq Instinct headset outputs raw EEG samples over BLE. NeuroStream is designed as the visualization layer that would sit above a BLE driver — replace `signal.worker.js`'s synthetic generator with a real BLE data handler, and the rest of the stack works unchanged. The architecture intentionally mirrors what a production companion app would look like.
