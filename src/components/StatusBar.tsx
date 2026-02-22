@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 interface Props {
   paused: boolean;
   onTogglePause: () => void;
+  actualHz: number
 }
 
-export default function StatusBar({ paused, onTogglePause }: Props) {
+export default function StatusBar({ paused, onTogglePause, actualHz }: Props) {
   const [elapsed, setElapsed] = useState(0);
   const [startTime] = useState(Date.now());
 
@@ -166,6 +167,7 @@ export default function StatusBar({ paused, onTogglePause }: Props) {
         {[
         { label: "SESSION",     value: fmt(elapsed) },
         { label: "SAMPLE RATE", value: "256 Hz"     },
+        { label: "ACTUAL RATE",   value: actualHz > 0 ? `${actualHz} Hz` : "-"},
         { label: "RESOLUTION",  value: "24-bit"     },
         { label: "CHANNELS",    value: "8"          },
         ].map(({ label, value }) => (
