@@ -9,7 +9,7 @@ import type { BrainState } from "@/types";
 
 export default function Home() {
   const [brainState, setBrainState] = useState<BrainState>("Relaxed");
-  const { buffers, writeHead, bandPower, paused, togglePause, exportCSV } =
+  const { buffers, writeHead, channelQuality, bandPower, paused, togglePause, exportCSV, actualHz } =
     useSignalWorker(brainState);
 
   return (
@@ -23,7 +23,7 @@ export default function Home() {
       }}
     >
       {/* Top bar — fixed height */}
-      <StatusBar paused={paused} onTogglePause={togglePause} />
+      <StatusBar paused={paused} onTogglePause={togglePause} actualHz={actualHz} />
 
       {/* Info strip — fixed height */}
       <div
@@ -64,15 +64,10 @@ export default function Home() {
         ))}
       </div>
 
-      {/*
-        Main content row.
-        This flex row must fill exactly the remaining vertical space.
-        overflow: hidden here is correct — each child manages its own scroll.
-      */}
       <div
         style={{
           flex: 1,
-          minHeight: 0,          /* CRITICAL — without this, flex children ignore overflow */
+          minHeight: 0,          
           display: "flex",
           overflow: "hidden",
           gap: 1,
@@ -93,22 +88,17 @@ export default function Home() {
             buffers={buffers}
             writeHead={writeHead}
             paused={paused}
+            channelQuality={channelQuality}
           />
         </div>
 
-        {/*
-          Sidebar — fixed 300px width.
-          THIS div is the scroll container. It must have:
-            - a fixed/constrained height (inherited from flex parent)
-            - minHeight: 0 so it respects the parent's height
-            - overflowY: auto so it actually scrolls
-        */}
+       
         <div
           style={{
             width: 300,
             flexShrink: 0,
             minHeight: 0,
-            overflowY: "auto",   /* ← THE actual scroll container */
+            overflowY: "auto",  
             overflowX: "hidden",
             background: "var(--bg)",
             display: "flex",
