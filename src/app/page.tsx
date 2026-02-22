@@ -9,8 +9,16 @@ import type { BrainState } from "@/types";
 
 export default function Home() {
   const [brainState, setBrainState] = useState<BrainState>("Relaxed");
-  const { buffers, writeHead, channelQuality, bandPower, paused, togglePause, exportCSV, actualHz } =
-    useSignalWorker(brainState);
+  const {
+    buffers,
+    writeHead,
+    bandPower,
+    channelQuality,
+    paused,
+    togglePause,
+    exportCSV,
+    actualHz,
+  } = useSignalWorker(brainState);
 
   return (
     <div
@@ -22,10 +30,14 @@ export default function Home() {
         background: "var(--bg)",
       }}
     >
-      {/* Top bar — fixed height */}
-      <StatusBar paused={paused} onTogglePause={togglePause} actualHz={actualHz} />
+      {/* Top bar */}
+      <StatusBar
+        paused={paused}
+        onTogglePause={togglePause}
+        actualHz={actualHz}
+      />
 
-      {/* Info strip — fixed height */}
+      {/* Info strip */}
       <div
         style={{
           height: 30,
@@ -64,24 +76,23 @@ export default function Home() {
         ))}
       </div>
 
+      {/* Main content */}
       <div
         style={{
           flex: 1,
-          minHeight: 0,          
+          minHeight: 0,
           display: "flex",
           overflow: "hidden",
-          gap: 1,
-          background: "var(--border-lo)",
         }}
       >
-        {/* Signal stream panel — fills all horizontal space left */}
+        {/* Left — signal stream */}
         <div
           style={{
             flex: 1,
             minWidth: 0,
             minHeight: 0,
             overflow: "hidden",
-            background: "var(--bg)",
+            borderRight: "1px solid var(--border-lo)",
           }}
         >
           <SignalStreamPanel
@@ -92,70 +103,85 @@ export default function Home() {
           />
         </div>
 
-       
+        {/*Right sidebar.*/}
         <div
           style={{
             width: 300,
             flexShrink: 0,
             minHeight: 0,
-            overflowY: "auto",  
+            overflowY: "auto",
             overflowX: "hidden",
             background: "var(--bg)",
-            display: "flex",
-            flexDirection: "column",
           }}
         >
+
+          {/* Frequency Bands */}
           <FrequencyAnalyzer bandPower={bandPower} />
 
-          <div style={{ height: 1, background: "var(--border-lo)", flexShrink: 0 }} />
+          <div style={{ height: 1, background: "var(--border-lo)" }} />
 
+          {/* Brain State */}
           <StateControls
             currentState={brainState}
             onStateChange={setBrainState}
             onExportCSV={exportCSV}
           />
 
-          <div style={{ height: 1, background: "var(--border-lo)", flexShrink: 0 }} />
+          <div style={{ height: 1, background: "var(--border-lo)" }} />
 
-          {/* Device info */}
-          <div style={{ background: "var(--bg-panel)", flexShrink: 0 }}>
+          {/* Device Info */}
+          <div style={{ background: "var(--bg-panel)" }}>
             <div className="panel-header">
               <span className="section-label">Device Info</span>
+              <span style={{ fontSize: 11, color: "var(--t3)" }}>
+                reported over BLE on connect
+              </span>
             </div>
-            {[
-              ["Device",    "Anthriq Instinct"],
-              ["Firmware",  "v2.3.1-sim"],
-              ["Protocol",  "NeuroStream BLE"],
-              ["Impedance", "< 5 kΩ"],
-              ["Filter",    "0.5–100 Hz BP"],
-              ["Notch",     "50 / 60 Hz"],
-            ].map(([key, val], i, arr) => (
-              <div
-                key={key}
-                className="row-hover"
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "7px 16px",
-                  borderBottom: i < arr.length - 1 ? "1px solid var(--border-lo)" : "none",
-                }}
-              >
-                <span style={{ fontSize: 11, color: "var(--t3)" }}>{key}</span>
-                <span
-                  className="mono"
-                  style={{ fontSize: 11, fontWeight: 500, color: "var(--text-1)" }}
+            <div>
+              {[
+                ["Device",     "Anthriq Instinct"],
+                ["Firmware",   "v2.3.1-sim"],
+                ["Protocol",   "NeuroStream BLE"],
+                ["Impedance",  "< 5 kΩ"],
+                ["Filter",     "0.5–100 Hz BP"],
+                ["Notch",      "50 / 60 Hz"],
+              ].map(([key, val], i, arr) => (
+                <div
+                  key={key}
+                  className="row-hover"
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "8px 16px",
+                    borderBottom:
+                      i < arr.length - 1
+                        ? "1px solid var(--border-lo)"
+                        : "none",
+                  }}
                 >
-                  {val}
-                </span>
-              </div>
-            ))}
+                  <span style={{ fontSize: 11, color: "var(--t3)" }}>
+                    {key}
+                  </span>
+                  <span
+                    className="mono"
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: "var(--text-1)",
+                    }}
+                  >
+                    {val}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div style={{ height: 1, background: "var(--border-lo)", flexShrink: 0 }} />
+          <div style={{ height: 1, background: "var(--border-lo)" }} />
 
-          {/* How to read */}
-          <div style={{ background: "var(--bg-panel)", flexShrink: 0 }}>
+          {/* How to Read */}
+          <div style={{ background: "var(--bg-panel)" }}>
             <div className="panel-header">
               <span className="section-label">How to Read</span>
             </div>
@@ -164,24 +190,29 @@ export default function Home() {
                 padding: "12px 16px",
                 display: "flex",
                 flexDirection: "column",
-                gap: 14,
+                gap: 16,
               }}
             >
               {[
                 {
                   label: "Waveform",
                   color: "var(--cyan)",
-                  text: "Raw voltage from one scalp electrode. X-axis = time (past → present). Y-axis = amplitude in μV.",
+                  text: "Raw voltage from one scalp electrode. Left = past, right = present. Amplitude = signal strength in μV.",
                 },
                 {
                   label: "Signal Quality",
                   color: "var(--green)",
-                  text: "Impedance estimate. Green >75% = reliable. Amber = check contact. Red = noisy — don't use for analysis.",
+                  text: "Impedance-based estimate per channel. Green >75% reliable. Amber = check contact. Red = too noisy for analysis.",
                 },
                 {
                   label: "Band Power %",
                   color: "#a78bfa",
-                  text: "Proportion of signal energy in each frequency band. All 5 sum to 100%.",
+                  text: "Energy in each EEG frequency band as a proportion. All 5 bands sum to 100%. Changes with brain state.",
+                },
+                {
+                  label: "Brain State",
+                  color: "var(--amber)",
+                  text: "Shifts the weights of each frequency band in the signal generator. Switching state clears the waveform buffer instantly.",
                 },
               ].map((item) => (
                 <div key={item.label}>
@@ -190,20 +221,25 @@ export default function Home() {
                       display: "flex",
                       alignItems: "center",
                       gap: 6,
-                      marginBottom: 4,
+                      marginBottom: 5,
                     }}
                   >
                     <div
                       style={{
                         width: 2,
-                        height: 10,
+                        height: 11,
                         background: item.color,
                         flexShrink: 0,
+                        borderRadius: 1,
                       }}
                     />
                     <span
                       className="mono"
-                      style={{ fontSize: 11, fontWeight: 500, color: "var(--text-1)" }}
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: "var(--text-1)",
+                      }}
                     >
                       {item.label}
                     </span>
@@ -212,8 +248,9 @@ export default function Home() {
                     style={{
                       fontSize: 11,
                       color: "var(--t2)",
-                      lineHeight: 1.6,
+                      lineHeight: 1.65,
                       paddingLeft: 8,
+                      margin: 0,
                     }}
                   >
                     {item.text}
@@ -223,8 +260,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Bottom padding so last item isn't flush against the scrollbar */}
-          <div style={{ height: 16, flexShrink: 0 }} />
+          {/* Bottom breathing room */}
+          <div style={{ height: 20 }} />
         </div>
       </div>
     </div>
